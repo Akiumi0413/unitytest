@@ -5,18 +5,22 @@ using System.Runtime.InteropServices.ComTypes;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement; 
 
 public class PlayerControl : MonoBehaviour
 {
     [SerializeField]private Rigidbody2D rb;
     private Animator anime;
     public Collider2D coll;
+    public Collider2D discoll;
     public float Speed = 10;
     public float jumpforce;
     public LayerMask ground;
+    public Transform cellingcheck;
     public int collections = 0;
     public Text Collection_Num;
     private bool isHurt;//默認是false
+    public AudioSource JumpAudio,CoinAudio,HurtAudio;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -29,18 +33,19 @@ public class PlayerControl : MonoBehaviour
         if (!isHurt) 
         {
             Movement();
+
         }
         switchanime();
     }
 
-   void Movement()
+   void Movement()//移動
     {
-        float move=Input.GetAxis("Horizontal");
+        float Move=Input.GetAxis("Horizontal");
         float facedirection = Input.GetAxisRaw("Horizontal");
 
-        if (move != 0)//角色移動
+        if (Move != 0)//角色移動
         {
-            rb.velocity = new Vector2(move * Speed /* * Time.deltaTime*/, rb.velocity.y);
+            rb.velocity = new Vector2(Move * Speed /* * Time.deltaTime*/, rb.velocity.y);
             anime.SetFloat("running", Mathf.Abs(facedirection));//Abs(絕對值)
 
         }
@@ -53,8 +58,10 @@ public class PlayerControl : MonoBehaviour
         {
             
             rb.velocity = new Vector2(rb.velocity.x, jumpforce /* * Time.deltaTime*/);
+            JumpAudio.Play();
             anime.SetBool("jumping", true);
         }
+        Crouch();
     }
     void switchanime() //切換動畫效果
     {
@@ -89,13 +96,19 @@ public class PlayerControl : MonoBehaviour
         }
         
     }
-    private void OnTriggerEnter2D(Collider2D collision) //收集物品
+    private void OnTriggerEnter2D(Collider2D collision) //碰撞觸發器
     {
-        if(collision.tag == "Collection")
+        if(collision.tag == "Collection")//收集物品
         {
             Destroy(collision.gameObject);
+            CoinAudio.Play();
             collections ++;
             Collection_Num.text = collections.ToString();
+        }
+        if (collision.tag == "Deathline")//死亡
+        {
+            GetComponent<AudioSource>().enabled = false;
+            Invoke("restart", 0.5f);
         }
     }
     private void OnCollisionEnter2D(Collision2D collision)//消滅敵人
@@ -114,13 +127,37 @@ public class PlayerControl : MonoBehaviour
             else if(transform.position.x<collision.gameObject.transform.position.x)
             {
                 rb.velocity = new Vector2(-2, rb.velocity.y);
+                HurtAudio.Play();
                 isHurt = true;
             }
             else if (transform.position.x > collision.gameObject.transform.position.x)
             {
                 rb.velocity = new Vector2(2, rb.velocity.y);
+                HurtAudio.Play();
                 isHurt = true;
             }
         }
+    }
+    
+    void Crouch()//趴下
+    {
+            if (!Physics2D.OverlapCircle(cellingcheck.position,0.2f,ground))
+        {
+            if (Input.GetButton("Crouch"))
+            {
+                anime.SetBool("crouching", true);
+                discoll.enabled = false;
+            }
+            else 
+            {
+                anime.SetBool("crouching", false);
+                discoll.enabled = true;
+            }
+        }
+    }
+    void restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        //Debug.Log("觸發");
     }
 }

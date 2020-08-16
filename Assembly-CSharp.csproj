@@ -66,8 +66,12 @@
     <Compile Include="Assets\Script\CamreaControl.cs" />
     <Compile Include="Assets\Script\Enemy.cs" />
     <Compile Include="Assets\Script\Enemy_frog.cs" />
+    <Compile Include="Assets\Script\EnterDialog.cs" />
+    <Compile Include="Assets\Script\EnterHouse.cs" />
     <Compile Include="Assets\Script\PlayerControl.cs" />
     <Compile Include="Assets\Script\enemy_eagle.cs" />
+    <Compile Include="Assets\Zero Rare\Retro Sound Effects\Demo\Demo.cs" />
+    <None Include="Assets\CasualGameBGM05\ReadMe.txt" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>D:/Unity/First/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
