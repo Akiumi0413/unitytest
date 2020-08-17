@@ -28,7 +28,7 @@ public class PlayerControl : MonoBehaviour
     }
 
     
-    void Update()
+    void FixedUpdate()
     {
         if (!isHurt) 
         {
@@ -37,15 +37,20 @@ public class PlayerControl : MonoBehaviour
         }
         switchanime();
     }
+    private void Update()
+    {
+        jump();
+        Crouch();
+    }
 
-   void Movement()//移動
+    void Movement()//移動
     {
         float Move=Input.GetAxis("Horizontal");
         float facedirection = Input.GetAxisRaw("Horizontal");
 
         if (Move != 0)//角色移動
         {
-            rb.velocity = new Vector2(Move * Speed /* * Time.deltaTime*/, rb.velocity.y);
+            rb.velocity = new Vector2(Move * Speed  * Time.fixedDeltaTime, rb.velocity.y);
             anime.SetFloat("running", Mathf.Abs(facedirection));//Abs(絕對值)
 
         }
@@ -54,18 +59,10 @@ public class PlayerControl : MonoBehaviour
             transform.localScale = new Vector3(facedirection, 1, 1);
             
         }
-        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground))//角色跳躍
-        {
-            
-            rb.velocity = new Vector2(rb.velocity.x, jumpforce /* * Time.deltaTime*/);
-            JumpAudio.Play();
-            anime.SetBool("jumping", true);
-        }
-        Crouch();
     }
     void switchanime() //切換動畫效果
     {
-        anime.SetBool("idle", false);
+        //anime.SetBool("idle", false);
         if(rb.velocity.y<0.1f && !coll.IsTouchingLayers(ground))
         {
             anime.SetBool("falling", true);
@@ -85,26 +82,35 @@ public class PlayerControl : MonoBehaviour
             if (Mathf.Abs(rb.velocity.x) < 0.1f)
             {
                 anime.SetBool("hurt", false);
-                anime.SetBool("idle", true);
+                //anime.SetBool("idle", true);
                 isHurt = false;
             }
         }
         else if (coll.IsTouchingLayers(ground))
         {
             anime.SetBool("falling", false);
-            anime.SetBool("idle", true);
+            //anime.SetBool("idle", true);
         }
         
     }
     private void OnTriggerEnter2D(Collider2D collision) //碰撞觸發器
     {
-        if(collision.tag == "Collection")//收集物品
+        if(collision.tag == "Cherry")//收集物品
         {
-            Destroy(collision.gameObject);
+            collision.GetComponent<Animator>().Play("isGet");
+            //Destroy(collision.gameObject);
             CoinAudio.Play();
-            collections ++;
-            Collection_Num.text = collections.ToString();
+            //collections ++;
+            //Collection_Num.text = collections.ToString();
+        }else if (collision.tag == "Gem")
+        {
+            collision.GetComponent<Animator>().Play("isGot");
+            //Destroy(collision.gameObject);
+            CoinAudio.Play();
+            //collections ++;
+            //Collection_Num.text = collections.ToString();
         }
+
         if (collision.tag == "Deathline")//死亡
         {
             GetComponent<AudioSource>().enabled = false;
@@ -139,6 +145,17 @@ public class PlayerControl : MonoBehaviour
         }
     }
     
+    void jump()
+    {
+        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground))//角色跳躍
+        {
+
+            rb.velocity = new Vector2(rb.velocity.x, jumpforce * Time.fixedDeltaTime);
+            JumpAudio.Play();
+            anime.SetBool("jumping", true);
+        }
+        Crouch();
+    }
     void Crouch()//趴下
     {
             if (!Physics2D.OverlapCircle(cellingcheck.position,0.2f,ground))
@@ -159,5 +176,11 @@ public class PlayerControl : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         //Debug.Log("觸發");
+    }
+
+    public void CollectionCount()
+    {
+        collections++;
+        Collection_Num.text = collections.ToString();
     }
 }
