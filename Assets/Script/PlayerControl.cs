@@ -16,10 +16,12 @@ public class PlayerControl : MonoBehaviour
     public float Speed = 10;
     public float jumpforce;
     public LayerMask ground;
-    public Transform cellingcheck;
+    public Transform cellingcheck,GroundChenk;
     public int collections = 0;
     public Text Collection_Num;
     private bool isHurt;//默認是false
+    private bool isGround;//默認是false
+    private int extrajump;
     public AudioSource JumpAudio,CoinAudio,HurtAudio;
     void Start()
     {
@@ -36,11 +38,13 @@ public class PlayerControl : MonoBehaviour
 
         }
         switchanime();
+        isGround = Physics2D.OverlapCircle(GroundChenk.position,0.2f,ground);
     }
     private void Update()
     {
-        jump();
+        //jump();
         Crouch();
+        newjump();
     }
 
     void Movement()//移動
@@ -98,22 +102,24 @@ public class PlayerControl : MonoBehaviour
         if(collision.tag == "Cherry")//收集物品
         {
             collision.GetComponent<Animator>().Play("isGet");
+            SoundMananger.instance.coinaudio();
             //Destroy(collision.gameObject);
-            CoinAudio.Play();
+            //CoinAudio.Play();
             //collections ++;
             //Collection_Num.text = collections.ToString();
         }else if (collision.tag == "Gem")
         {
             collision.GetComponent<Animator>().Play("isGot");
+            SoundMananger.instance.coinaudio();
             //Destroy(collision.gameObject);
-            CoinAudio.Play();
+            //CoinAudio.Play();
             //collections ++;
             //Collection_Num.text = collections.ToString();
         }
 
         if (collision.tag == "Deathline")//死亡
         {
-            GetComponent<AudioSource>().enabled = false;
+            //GetComponent<AudioSource>().enabled = false;
             Invoke("restart", 0.5f);
         }
     }
@@ -133,19 +139,21 @@ public class PlayerControl : MonoBehaviour
             else if(transform.position.x<collision.gameObject.transform.position.x)
             {
                 rb.velocity = new Vector2(-2, rb.velocity.y);
-                HurtAudio.Play();
+                SoundMananger.instance.hurtAudio();
+                //HurtAudio.Play();
                 isHurt = true;
             }
             else if (transform.position.x > collision.gameObject.transform.position.x)
             {
                 rb.velocity = new Vector2(2, rb.velocity.y);
-                HurtAudio.Play();
+                SoundMananger.instance.hurtAudio();
+                //HurtAudio.Play();
                 isHurt = true;
             }
         }
     }
     
-    void jump()
+    /*void jump()
     {
         if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground))//角色跳躍
         {
@@ -155,6 +163,27 @@ public class PlayerControl : MonoBehaviour
             anime.SetBool("jumping", true);
         }
         Crouch();
+    }*/
+
+    void newjump()
+    {
+        if (isGround)
+        {
+            extrajump = 1;
+        }
+        if(Input.GetButtonDown("Jump") && extrajump > 0)
+        {
+            rb.velocity = Vector2.up * jumpforce*Time.fixedDeltaTime;//Vector2.up 相當於 new Vector2(0,1)
+            anime.SetBool("jumping", true);
+            SoundMananger.instance.jumpaudio();
+            extrajump--;
+        }
+        if (Input.GetButtonDown("Jump") && extrajump == 0 && isGround)
+        {
+            rb.velocity = Vector2.up * jumpforce * Time.fixedDeltaTime;
+            anime.SetBool("jumping", true);
+            SoundMananger.instance.jumpaudio();
+        }
     }
     void Crouch()//趴下
     {
